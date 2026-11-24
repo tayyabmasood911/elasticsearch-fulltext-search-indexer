@@ -1,0 +1,53 @@
+{
+  "index_patterns": ["search_index_*", "enterprise_catalog_*"],
+  "template": {
+    "settings": {
+      "index": {
+        "number_of_shards": 3,
+        "number_of_replicas": 1,
+        "refresh_interval": "5s",
+        "translog.durability": "async"
+      },
+      "analysis": {
+        "filter": {
+          "autocomplete_filter": {
+            "type": "edge_ngram",
+            "min_gram": 2,
+            "max_gram": 15
+          },
+          "synonym_filter": {
+            "type": "synonym",
+            "synonyms": [
+              "k8s, kubernetes",
+              "sre, site reliability engineering"
+            ]
+          }
+        },
+        "analyzer": {
+          "autocomplete_analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase", "autocomplete_filter"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "dynamic": false,
+      "properties": {
+        "title": {
+          "type": "text",
+          "analyzer": "autocomplete_analyzer",
+          "fields": { "keyword": { "type": "keyword", "ignore_above": 256 } }
+        },
+        "category": { "type": "keyword" },
+        "created_at": { "type": "date" }
+      }
+    }
+  },
+  "priority": 200,
+  "version": 1,
+  "_meta": {
+    "description": "Enterprise full-text index template with autocomplete edge-ngram and synonym filters"
+  }
+}

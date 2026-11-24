@@ -1,0 +1,7 @@
+* text=auto eol=lf
+Makefile linguist-vendored=true
+*.yaml linguist-detectable=true
+*.yml linguist-detectable=true
+*.py linguist-detectable=true
+*.ts linguist-detectable=true
+*.sql linguist-detectable=true

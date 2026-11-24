@@ -1,9 +1,121 @@
 {
-  "settings": { "number_of_shards": 2, "number_of_replicas": 1 },
+  "settings": {
+    "index": {
+      "number_of_shards": 3,
+      "number_of_replicas": 1,
+      "refresh_interval": "5s",
+      "max_result_window": 50000
+    },
+    "analysis": {
+      "filter": {
+        "autocomplete_filter": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 15
+        },
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "english_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        },
+        "synonym_filter": {
+          "type": "synonym",
+          "synonyms": [
+            "k8s, kubernetes",
+            "db, database",
+            "sre, site reliability engineering",
+            "ai, artificial intelligence"
+          ]
+        }
+      },
+      "char_filter": {
+        "html_strip_filter": {
+          "type": "html_strip"
+        }
+      },
+      "analyzer": {
+        "autocomplete_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "autocomplete_filter"
+          ]
+        },
+        "autocomplete_search_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        },
+        "content_analyzer": {
+          "type": "custom",
+          "char_filter": ["html_strip_filter"],
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_filter",
+            "english_stop",
+            "english_stemmer"
+          ]
+        }
+      }
+    }
+  },
   "mappings": {
+    "dynamic": "strict",
     "properties": {
-      "title": { "type": "text", "analyzer": "standard" },
-      "category": { "type": "keyword" }
+      "id": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "autocomplete_analyzer",
+        "search_analyzer": "autocomplete_search_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "standard": {
+            "type": "text",
+            "analyzer": "standard"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "content_analyzer",
+        "fields": {
+          "suggest": {
+            "type": "completion"
+          }
+        }
+      },
+      "category": {
+        "type": "keyword"
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "price": {
+        "type": "scaled_float",
+        "scaling_factor": 100
+      },
+      "rating": {
+        "type": "half_float"
+      },
+      "in_stock": {
+        "type": "boolean"
+      },
+      "created_at": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      }
     }
   }
 }
